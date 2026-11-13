@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: anzan
+      POSTGRES_PASSWORD: anzan
+      POSTGRES_DB: anzan
+    ports:
+      - "5432:5432"
+    volumes:
+      - anzan-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anzan -d anzan"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL=postgresql://anzan:anzan@db:5432/anzan
+    ports:
+      - "3000:3000"
+
+volumes:
+  anzan-data:
